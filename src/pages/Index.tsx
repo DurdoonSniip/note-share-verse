@@ -35,8 +35,19 @@ const Index = () => {
   };
 
   const handleShareNote = (note: Note) => {
-    // In a real app, this would open a sharing dialog
-    toast.success(`Sharing "${note.title}"`);
+    // Generate a shareable URL for the note
+    const shareableUrl = `${window.location.origin}/notes/${note.id}`;
+    
+    // Copy the URL to clipboard
+    navigator.clipboard.writeText(shareableUrl)
+      .then(() => {
+        toast.success("Link copied to clipboard!", {
+          description: "Share this link with others to let them view your note.",
+        });
+      })
+      .catch(() => {
+        toast.error("Failed to copy link");
+      });
   };
 
   return (
