@@ -16,17 +16,35 @@ interface Note {
 const Index = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [editingNote, setEditingNote] = useState<Note | null>(null);
 
   const handleSaveNote = ({ title, content }: { title: string; content: string }) => {
-    const newNote = {
-      id: Date.now().toString(),
-      title,
-      content,
-      date: new Date().toLocaleDateString(),
-    };
-    setNotes([newNote, ...notes]);
+    if (editingNote) {
+      // Update existing note
+      setNotes(notes.map(note => 
+        note.id === editingNote.id 
+          ? { ...note, title, content, date: new Date().toLocaleDateString() }
+          : note
+      ));
+      setEditingNote(null);
+      toast.success("Note updated successfully");
+    } else {
+      // Create new note
+      const newNote = {
+        id: Date.now().toString(),
+        title,
+        content,
+        date: new Date().toLocaleDateString(),
+      };
+      setNotes([newNote, ...notes]);
+      toast.success("Note created successfully");
+    }
     setIsEditorOpen(false);
-    toast.success("Note created successfully");
+  };
+
+  const handleEditNote = (note: Note) => {
+    setEditingNote(note);
+    setIsEditorOpen(true);
   };
 
   const handleDeleteNote = (id: string) => {
@@ -58,7 +76,10 @@ const Index = () => {
             <h1 className="text-3xl font-bold text-note-900">My Notes</h1>
             <p className="text-note-500">Capture your thoughts and ideas</p>
           </div>
-          <Button onClick={() => setIsEditorOpen(true)} size="lg">
+          <Button onClick={() => {
+            setEditingNote(null);
+            setIsEditorOpen(true);
+          }} size="lg">
             <Plus className="mr-2 h-5 w-5" />
             New Note
           </Button>
@@ -74,6 +95,7 @@ const Index = () => {
                 date={note.date}
                 onDelete={() => handleDeleteNote(note.id)}
                 onShare={() => handleShareNote(note)}
+                onClick={() => handleEditNote(note)}
               />
             ))}
           </AnimatePresence>
@@ -94,7 +116,11 @@ const Index = () => {
           {isEditorOpen && (
             <NoteEditor
               onSave={handleSaveNote}
-              onClose={() => setIsEditorOpen(false)}
+              onClose={() => {
+                setIsEditorOpen(false);
+                setEditingNote(null);
+              }}
+              initialNote={editingNote || undefined}
             />
           )}
         </AnimatePresence>
